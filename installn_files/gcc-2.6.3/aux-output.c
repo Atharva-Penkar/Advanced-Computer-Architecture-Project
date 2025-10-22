@@ -1,0 +1,1 @@
+./config/ss/ss.c
