@@ -176,6 +176,7 @@ extern int errno;
 #endif
 
 extern int sys_nerr;
+int sys_nerr = 0;
 #ifndef HAVE_STRERROR
 #if defined(bsd4_4)
 extern const char *const sys_errlist[];

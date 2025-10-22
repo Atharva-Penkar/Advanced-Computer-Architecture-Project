@@ -1,4 +1,0 @@
-#!/bin/sh
-# GCC was configured as follows:
-./configure --host=sparc-sun-solaris2 --target=ssbig-na-sstrix --with-gnu-as --with-gnu-ld --prefix=/p/galileo/projects/ss2/release
-echo host=sparc-sun-solaris2 target=ssbig-na-sstrix build=sparc-sun-solaris2

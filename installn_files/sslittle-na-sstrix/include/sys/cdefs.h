@@ -39,8 +39,12 @@ Cambridge, MA 02139, USA.  */
 /* In GCC 2.5 and later, these keywords are meaningless when applied to
    functions, as ANSI requires.  Instead, we use GCC's special
    `__attribute__' syntax.  */
-#define	__NORETURN	__attribute__ ((__volatile__))
+/*#define	__NORETURN	__attribute__ ((__volatile__))
 #define	__CONSTVALUE	__attribute__ ((__const__))
+*/
+/* fixed for v2.7.2.1 */
+#	define	__NORETURN
+#	define	__CONSTVALUE
 #else
 #define __NORETURN
 #define __CONSTVALUE

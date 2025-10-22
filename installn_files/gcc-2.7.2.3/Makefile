@@ -67,7 +67,7 @@ OLDAR_FLAGS = qc
 AR_FLAGS = rc
 SHELL = /bin/sh
 # on sysV, define this as cp.
-INSTALL = /export/home/mark/simplescalar/gcc-2.7.2.3/install.sh -c
+INSTALL = /home/student/aca_laboratory/project/Advanced-Computer-Architecture-Project/installn_files/gcc-2.7.2.3/install.sh -c
 # These permit overriding just for certain files.
 INSTALL_PROGRAM = $(INSTALL)
 INSTALL_DATA = $(INSTALL)
@@ -164,15 +164,15 @@ LIMITS_H_TEST = [ -f $(SYSTEM_HEADER_DIR)/limits.h ]
 PREMADE_ATTRTAB_MD = Makefile  # Guaranteed not to cmp equal to md.
 PREMADE_ATTRTAB = 
 
-target=ssbig-na-sstrix
-xmake_file=sparc/x-sysv4
+target=sslittle-na-sstrix
+xmake_file=x-linux
 tmake_file=ss/t-ss-gas
 out_file=./config/ss/ss.c
 out_object_file=ss.o
 md_file=./config/ss/ss.md
-tm_file=./config/ss/ssbig.h
-build_xm_file=./config/sparc/xm-sol2.h
-host_xm_file=./config/sparc/xm-sol2.h
+tm_file=./config/ss/sslittle.h
+build_xm_file=./config/i386/xm-linux.h
+host_xm_file=./config/i386/xm-linux.h
 lang_specs_files= ./cp/lang-specs.h
 lang_options_files= ./cp/lang-options.h
 version=2.7.2.3
@@ -182,7 +182,7 @@ mainversion=`sed -e 's/.*\"\([0-9]*\.[0-9]*\).*/\1/' < $(srcdir)/version.c`
 srcdir = .
 # Common prefix for installation directories.
 # NOTE: This directory must exist when you start installation.
-prefix = /usr/local/ss
+prefix = /home/student/aca_laboratory/project/Advanced-Computer-Architecture-Project/installn_files
 # Directory in which to put localized header files. On the systems with
 # gcc as the native cc, `local_prefix' may not be `prefix' which is
 # `/usr'.
@@ -197,7 +197,7 @@ libdir = $(exec_prefix)/lib
 # Directory in which the compiler finds executables, libraries, etc.
 libsubdir = $(libdir)/gcc-lib/$(target)/$(version)
 # Directory in which the compiler finds g++ includes.
-gxx_include_dir = $(libdir)/g++-include
+gxx_include_dir = /home/student/aca_laboratory/project/Advanced-Computer-Architecture-Project/installn_files/include/g++
 # Directory to search for site-specific includes.
 includedir = $(local_prefix)/include
 # assertdir is overridden in cross-make.
@@ -408,8 +408,20 @@ LIBGCC1 = libgcc1.null
 CROSS_LIBGCC1 = libgcc1.null
 #T_CFLAGS = -Dinhibit_libc
 ####host overrides
-X_CFLAGS=-DSVR4
-ALLOCA=alloca.o
+# It is defined in config/xm-linux.h.
+# X_CFLAGS = -DPOSIX
+
+# The following is needed when compiling stages 2 and 3 because gcc's
+# limits.h must be picked up before /usr/include/limits.h.  This is because
+# each does an #include_next of the other if the other hasn't been included.
+# /usr/include/limits.h loses if it gets found first because /usr/include is
+# at the end of the search order.  When a new version of gcc is released,
+# gcc's limits.h hasn't been installed yet and hence isn't found.
+
+BOOT_CFLAGS = -O $(CFLAGS) -Iinclude
+
+# Don't run fixproto
+STMP_FIXPROTO =
 ####cross overrides
 # Build libgcc1.a for a cross-compiler.
 # By default this expects the user to provide libgcc1.a,

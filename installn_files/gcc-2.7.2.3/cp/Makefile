@@ -84,8 +84,8 @@ GCC_CFLAGS=$(INTERNAL_CFLAGS) $(X_CFLAGS) $(T_CFLAGS) $(CFLAGS)
 # These are used because `configure' appends `cross-make'
 # to the makefile when making a cross-compiler.
 
-target=ssbig-na-sstrix
-xmake_file=sparc/x-sysv4
+target=sslittle-na-sstrix
+xmake_file=x-linux
 tmake_file=ss/t-ss-gas
 #version=`sed -e 's/.*\"\([^ \"]*\)[ \"].*/\1/' < $(srcdir)/version.c`
 #mainversion=`sed -e 's/.*\"\([0-9]*\.[0-9]*\).*/\1/' < $(srcdir)/version.c`
@@ -128,8 +128,20 @@ LIBGCC1 = libgcc1.null
 CROSS_LIBGCC1 = libgcc1.null
 #T_CFLAGS = -Dinhibit_libc
 ####host overrides
-X_CFLAGS=-DSVR4
-ALLOCA=alloca.o
+# It is defined in config/xm-linux.h.
+# X_CFLAGS = -DPOSIX
+
+# The following is needed when compiling stages 2 and 3 because gcc's
+# limits.h must be picked up before /usr/include/limits.h.  This is because
+# each does an #include_next of the other if the other hasn't been included.
+# /usr/include/limits.h loses if it gets found first because /usr/include is
+# at the end of the search order.  When a new version of gcc is released,
+# gcc's limits.h hasn't been installed yet and hence isn't found.
+
+BOOT_CFLAGS = -O $(CFLAGS) -Iinclude
+
+# Don't run fixproto
+STMP_FIXPROTO =
 ####cross overrides
 # Build libgcc1.a for a cross-compiler.
 # By default this expects the user to provide libgcc1.a,
