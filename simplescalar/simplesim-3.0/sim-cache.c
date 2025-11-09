@@ -104,6 +104,10 @@ static struct cache_t *itlb = NULL;
 /* data TLB */
 static struct cache_t *dtlb = NULL;
 
+//New variable for prefetcher
+static char *prefetcher_opt = "none";
+
+
 /* text-based stat profiles */
 #define MAX_PCSTAT_VARS 8
 static struct stat_stat_t *pcstat_stats[MAX_PCSTAT_VARS];
