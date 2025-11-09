@@ -225,6 +225,13 @@ struct cache_t
   struct cache_set_t sets[1];	/* each entry is a set */
 };
 
+struct stride_entry {
+    md_addr_t last_addr;
+    int stride;
+    int confidence;
+    md_addr_t pc; // only if you want to use PC-based detection
+};
+
 /* create and initialize a general cache structure */
 struct cache_t *			/* pointer to cache created */
 cache_create(char *name,		/* name of the cache */
