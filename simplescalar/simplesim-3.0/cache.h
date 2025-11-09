@@ -147,6 +147,12 @@ struct cache_set_t
 				   access to cache blocks */
 };
 
+enum prefetcher_policy {
+    PREF_NONE,
+    PREF_NEXT_LINE,
+    PREF_STRIDE
+};
+
 /* cache definition */
 struct cache_t
 {
