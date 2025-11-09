@@ -362,7 +362,7 @@ sim_check_options(struct opt_odb_t *odb,	/* options database */
 		 name, &nsets, &bsize, &assoc, &c) != 5)
 	fatal("bad l1 D-cache parms: <name>:<nsets>:<bsize>:<assoc>:<repl>");
       cache_dl1 = cache_create(name, nsets, bsize, /* balloc */FALSE,
-			       /* usize */0, assoc, cache_char2policy(c),
+			       /* usize */0, assoc, cache_char2policy(c), prefetcher, 
 			       dl1_access_fn, /* hit latency */1);
 
       /* is the level 2 D-cache defined? */
@@ -375,7 +375,7 @@ sim_check_options(struct opt_odb_t *odb,	/* options database */
 	    fatal("bad l2 D-cache parms: "
 		  "<name>:<nsets>:<bsize>:<assoc>:<repl>");
 	  cache_dl2 = cache_create(name, nsets, bsize, /* balloc */FALSE,
-				   /* usize */0, assoc, cache_char2policy(c),
+				   /* usize */0, assoc, cache_char2policy(c), prefetcher, 
 				   dl2_access_fn, /* hit latency */1);
 	}
     }
