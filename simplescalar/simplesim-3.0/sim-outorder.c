@@ -249,6 +249,10 @@ static int bugcompat_mode;
 #define FU_FPALU_INDEX			3
 #define FU_FPMULT_INDEX			4
 
+//global declaration for prefetcher
+static char *prefetcher_opt = "none";
+static enum prefetcher_policy prefetcher = PREF_NONE;
+
 /* resource pool definition, NOTE: update FU_*_INDEX defs if you change this */
 struct res_desc fu_config[] = {
   {
