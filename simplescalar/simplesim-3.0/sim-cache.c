@@ -124,6 +124,9 @@ static struct stat_stat_t *pcstat_sdists[MAX_PCSTAT_VARS];
 	 ? *((STAT)->variant.for_counter.var)				\
 	 : (panic("bad stat class"), 0))))
 
+//Global prefetcher
+enum prefetcher_policy prefetcher = PREF_NONE;
+
 /* l1 data cache l1 block miss handler function */
 static unsigned int			/* latency of block access */
 dl1_access_fn(enum mem_cmd cmd,		/* access cmd, Read or Write */
@@ -467,7 +470,6 @@ sim_check_options(struct opt_odb_t *odb,	/* options database */
 			  /* hit latency */1);
     }
 
-  enum prefetcher_policy prefetcher = PREF_NONE;
   if (!strcmp(prefetcher_opt, "next_line"))
       prefetcher = PREF_NEXT_LINE;
   else if (!strcmp(prefetcher_opt, "stride"))
