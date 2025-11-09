@@ -265,6 +265,7 @@ cache_create(char *name,		/* name of the cache */
 	     int usize,			/* size of user data to alloc w/blks */
 	     int assoc,			/* associativity of cache */
 	     enum cache_policy policy,	/* replacement policy w/in sets */
+       enum prefetcher_policy prefetcher, //Checking type of prefetcher
 	     /* block access function, see description w/in struct cache def */
 	     unsigned int (*blk_access_fn)(enum mem_cmd cmd,
 					   md_addr_t baddr, int bsize,
@@ -310,6 +311,15 @@ cache_create(char *name,		/* name of the cache */
   cp->assoc = assoc;
   cp->policy = policy;
   cp->hit_latency = hit_latency;
+  cp->prefetcher = prefetcher; //Assigned the prefetcher type
+
+  //to allocate stride table for 
+  if (prefetcher == PREF_STRIDE) { 
+      cp->stride_table_size = 128;
+      cp->stride_table = calloc(cp->stride_table_size, sizeof(struct stride_entry));
+  }
+
+
 
   /* miss/replacement functions */
   cp->blk_access_fn = blk_access_fn;
