@@ -165,6 +165,11 @@ struct cache_t
   int assoc;			/* cache associativity */
   enum cache_policy policy;	/* cache replacement policy */
   unsigned int hit_latency;	/* cache hit latency */
+  
+  // Needed only for stride prefetcher:
+  enum prefetcher_policy prefetcher;  
+  struct stride_entry *stride_table;
+  int stride_table_size;
 
   /* miss/replacement handler, read/write BSIZE bytes starting at BADDR
      from/into cache block BLK, returns the latency of the operation
