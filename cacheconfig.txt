@@ -1,0 +1,1 @@
+-cache:dl1 dl1:256:32:1:l -cache:il1 il1:128:32:1:l -cache:dl2 dl2:1024:64:2:l
