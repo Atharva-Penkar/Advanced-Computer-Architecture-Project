@@ -381,6 +381,7 @@ cache_create(char *name,		/* name of the cache */
 	  blk->status = 0;
 	  blk->tag = 0;
 	  blk->ready = 0;
+    blk->freq_count = 0;
 	  blk->user_data = (usize != 0
 			    ? (byte_t *)calloc(usize, sizeof(byte_t)) : NULL);
 
@@ -409,6 +410,7 @@ cache_char2policy(char c)		/* replacement policy as a char */
   case 'l': return LRU;
   case 'r': return Random;
   case 'f': return FIFO;
+  case 'q': return LFU;
   default: fatal("bogus replacement policy, `%c'", c);
   }
 }
@@ -427,6 +429,7 @@ cache_config(struct cache_t *cp,	/* cache instance */
 	  cp->policy == LRU ? "LRU"
 	  : cp->policy == Random ? "Random"
 	  : cp->policy == FIFO ? "FIFO"
+	  : cp->policy == LFU ? "LFU"
 	  : (abort(), ""));
 }
 
@@ -581,6 +584,29 @@ cache_access(struct cache_t *cp,	/* cache to access */
       repl = CACHE_BINDEX(cp, cp->sets[set].blks, bindex);
     }
     break;
+  case LFU:
+    {
+        // Find block with minimum freq_count in the set
+        struct cache_blk_t *cur_blk = NULL;
+        struct cache_blk_t *min_blk = NULL;
+        unsigned int min_freq = (unsigned int)(-1);
+
+        // Scan all blocks in this set
+        cur_blk = cp->sets[set].way_head;
+
+        for (int i = 0; i < cp->assoc; i++) {
+            if (cur_blk->freq_count < min_freq) {
+                min_freq = cur_blk->freq_count;
+                min_blk = cur_blk;
+            }
+            cur_blk = cur_blk->way_next;
+        }
+        repl = min_blk;
+
+        // Update way list: move to head on replacement
+        update_way_list(&cp->sets[set], repl, Head);
+    }
+    break;
   default:
     panic("bogus replacement policy");
   }
@@ -623,6 +649,9 @@ cache_access(struct cache_t *cp,	/* cache to access */
   /* update block tags */
   repl->tag = tag;
   repl->status = CACHE_BLK_VALID;	/* dirty bit set on update */
+  
+  /* Initialize frequency count for LFU policy */
+  repl->freq_count = 1;
 
   /* read data block */
   lat += cp->blk_access_fn(Read, CACHE_BADDR(cp, addr), cp->bsize,
@@ -657,6 +686,7 @@ cache_access(struct cache_t *cp,	/* cache to access */
   
   /* **HIT** */
   cp->hits++;
+  blk->freq_count++;
 
   /* copy data out of cache block, if block exists */
   if (cp->balloc)
@@ -692,6 +722,7 @@ cache_access(struct cache_t *cp,	/* cache to access */
   
   /* **FAST HIT** */
   cp->hits++;
+  blk->freq_count++;
 
   /* copy data out of cache block, if block exists */
   if (cp->balloc)

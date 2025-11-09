@@ -102,7 +102,8 @@
 enum cache_policy {
   LRU,		/* replace least recently used block (perfect LRU) */
   Random,	/* replace a random block */
-  FIFO		/* replace the oldest block in the set */
+  FIFO,		/* replace the oldest block in the set */
+  LFU           /* replace the least frequently used block */
 };
 
 /* block status values */
@@ -130,6 +131,8 @@ struct cache_blk_t
      defined in this structure! */
   byte_t data[1];		/* actual data block starts here, block size
 				   should probably be a multiple of 8 */
+  // Add this in struct cache_blk_t in cache.h, if not already present
+  unsigned int freq_count;
 };
 
 /* cache set definition (one or more blocks sharing the same set index) */
