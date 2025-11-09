@@ -760,6 +760,38 @@ cache_access(struct cache_t *cp,	/* cache to access */
   cp->last_tagset = CACHE_TAGSET(cp, addr);
   cp->last_blk = blk;
 
+  if (cp->prefetcher == PREF_NEXT_LINE) {
+      md_addr_t prefetch_addr = addr + cp->bsize;
+      cache_prefetch(cp, prefetch_addr, now);
+  }
+  else if (cp->prefetcher == PREF_STRIDE) {
+      // Simple stride prefetch (by address, not PC)
+      int idx = (addr / cp->bsize) % cp->stride_table_size;
+      struct stride_entry *e = &cp->stride_table[idx];
+      int stride_detected = 0;
+
+      // Detect stride
+      if (e->last_addr) {
+          int str = addr - e->last_addr;
+          if (str == e->stride)
+              e->confidence++;
+          else {
+              e->stride = str;
+              e->confidence = 0;
+          }
+          if (e->confidence >= 2 && e->stride != 0)
+              stride_detected = 1;
+      }
+      e->last_addr = addr;
+
+      // If confident, issue stride prefetch
+      if (stride_detected) {
+          md_addr_t prefetch_addr = addr + e->stride;
+          cache_prefetch(cp, prefetch_addr, now);
+      }
+  }
+
+
   /* return first cycle data is available to access */
   return (int) MAX(cp->hit_latency, (blk->ready - now));
 }
