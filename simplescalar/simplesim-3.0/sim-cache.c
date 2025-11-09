@@ -466,6 +466,15 @@ sim_check_options(struct opt_odb_t *odb,	/* options database */
 			  cache_char2policy(c), dtlb_access_fn,
 			  /* hit latency */1);
     }
+
+  enum prefetcher_policy prefetcher = PREF_NONE;
+  if (!strcmp(prefetcher_opt, "next_line"))
+      prefetcher = PREF_NEXT_LINE;
+  else if (!strcmp(prefetcher_opt, "stride"))
+      prefetcher = PREF_STRIDE;
+  else
+      prefetcher = PREF_NONE;
+
 }
 
 /* initialize the simulator */
