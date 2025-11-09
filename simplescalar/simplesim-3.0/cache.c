@@ -256,12 +256,6 @@ update_way_list(struct cache_set_t *set,	/* set contained way chain */
     panic("bogus WHERE designator");
 }
 
-enum prefetcher_policy {
-    PREF_NONE,
-    PREF_NEXT_LINE,
-    PREF_STRIDE
-};
-
 /* create and initialize a general cache structure */
 struct cache_t *			/* pointer to cache created */
 cache_create(char *name,		/* name of the cache */
