@@ -242,6 +242,7 @@ cache_create(char *name,		/* name of the cache */
 	     int assoc,			/* associativity of cache */
 	     enum cache_policy policy,	/* replacement policy w/in sets */
 	     /* block access function, see description w/in struct cache def */
+       enum prefetcher_policy prefetcher,
 	     unsigned int (*blk_access_fn)(enum mem_cmd cmd,
 					   md_addr_t baddr, int bsize,
 					   struct cache_blk_t *blk,
