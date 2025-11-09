@@ -139,6 +139,10 @@
 /* bound sqword_t/dfloat_t to positive int */
 #define BOUND_POS(N)		((int)(MIN(MAX(0, (N)), 2147483647)))
 
+static void cache_prefetch(struct cache_t *cp, md_addr_t addr, tick_t now) {
+    // Do a "dummy" read to bring the block into cache, ignore latency & data
+    cache_access(cp, Read, addr, NULL, cp->bsize, now, NULL, NULL);
+}
 /* unlink BLK from the hash table bucket chain in SET */
 static void
 unlink_htab_ent(struct cache_t *cp,		/* cache to update */
