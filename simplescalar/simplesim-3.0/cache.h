@@ -165,9 +165,9 @@ struct cache_t
   int assoc;			/* cache associativity */
   enum cache_policy policy;	/* cache replacement policy */
   unsigned int hit_latency;	/* cache hit latency */
-  
-  // Needed only for stride prefetcher:
+
   enum prefetcher_policy prefetcher;  
+  // Needed only for stride prefetcher:
   struct stride_entry *stride_table;
   int stride_table_size;
 
