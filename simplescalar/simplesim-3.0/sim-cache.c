@@ -329,6 +329,10 @@ sim_reg_options(struct opt_odb_t *odb)	/* options database */
 		      pcstat_vars, MAX_PCSTAT_VARS, &pcstat_nelt, NULL,
 		      /* !print */FALSE, /* format */NULL, /* accrue */TRUE);
 
+  
+  opt_reg_string(odb, "-prefetcher",
+    "prefetcher type {none|next_line|stride}",
+    &prefetcher_opt, "none", TRUE, NULL);
 }
 
 /* check simulator-specific option values */
