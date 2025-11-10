@@ -5,3 +5,4 @@ cd ~/Advanced-Computer-Architecture-Project/simplescalar/simplesim-3.0
 
 ./sim-cache -prefetcher next_line -config ~/Advanced-Computer-Architecture-Project/cacheconfig.txt ~/Advanced-Computer-Architecture-Project/simplescalar/simplesim-3.0/tests-pisa/bin.little/test-math > result_nextline.txt
 ./sim-cache -prefetcher stride -config ~/Advanced-Computer-Architecture-Project/cacheconfig.txt ~/Advanced-Computer-Architecture-Project/simplescalar/simplesim-3.0/tests-pisa/bin.little/test-math > result_stride.txt
+
