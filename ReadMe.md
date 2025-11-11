@@ -48,7 +48,4 @@
 | `next_line`      | Always prefetches the next sequential cache block        | Sequential access patterns                       | Simple; no extra state  |
 | `stride`         | Detects stride by comparing consecutive addresses; prefetches next predicted block based on stride | Works well for strided or patterned memory access, not limited to sequential | More complex; needs stride tracking table |
 
----
-
-**Usage:** Run the simulator with the command line option, for example:
 
