@@ -1,0 +1,7 @@
+Config,nsets,bsize,assoc,repl,fmath_il1_hit_rate,fmath_dl1_hit_rate,math_il1_hit_rate,math_dl1_hit_rate,printf_il1_hit_rate,printf_dl1_hit_rate
+LFU.txt_next_line,256,64,4,q,.9870,.9799,.9953,.9938,.9993,.9989
+LFU.txt_none,256,64,4,q,.9870,.9799,.9953,.9938,.9993,.9989
+LFU.txt_stride,256,64,4,q,.9870,.9799,.9953,.9938,.9993,.9989
+LRU.txt_next_line,256,64,4,l,.9870,.9799,.9953,.9938,.9993,.9989
+LRU.txt_none,256,64,4,l,.9870,.9799,.9953,.9938,.9993,.9989
+LRU.txt_stride,256,64,4,l,.9870,.9799,.9953,.9938,.9993,.9989
