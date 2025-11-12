@@ -112,3 +112,10 @@ chmod +x runAll.sh
 ./runAll.sh
 ```
 
+---
+
+## Conclusion
+
+The project delivers advanced cache replacement politices and dynamic prefetching in SimpleScalar, supporting diverse workload simulations. LFU improves cache block retention based on access frequency, while the stride prefetcher dynamically learns and exploits non-linear but regular memory access patterns. These improvements enable thorough evaluation and tuning of caching strategies for modern architectures.
+
+For further details, please see the full project report: [ACA_Lab_Project_Report.pdf](./ACA_Lab_Project_Report.pdf)
