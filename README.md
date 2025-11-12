@@ -238,61 +238,59 @@ This benchmark simulates a shifting working set where old, frequently used data 
 
 **Expected Outcome:** LRU should perform well, while a naïve LFU implementation may struggle due to its reliance on outdated historical frequency data.
 
-</br>
-</br>
-</br>
-</br>
-</br>
-</br>
-</br>
-</br>
+---
+# Experimental Results and Analysis
 
-![alt text](plot_1_prefetcher_comparison_normalized.png)
+This section visualizes the impact of different cache replacement and prefetcher policies across our suite of benchmarks. Each figure and explanation highlights crucial insights into spatial/temporal locality, cache architecture, and the real-world effectiveness of LFU, LRU, FIFO, Random, Next-Line, and Stride prefetching.
 
-We  have  taken  the  average  of  DL1  hit  rates  across  all  the  benchmarks  and  replacement 
-policies. 
-The graph indicates that the next line prefetcher delivers the best performance. This superior 
-result  is  attributed  to  the  spatial  locality  present  in  the arrays within most of our benchmark 
-codes, which the next line prefetcher effectively exploits.  
-Following this, the prefetcher with no specific settings shows intermediate performance. 
-Conversely,  the  stride  prefetcher  performs  poorly  because  the  benchmarks  lack  the  large 
-strides required for it to be effective.
-
-![alt text](plot_2_replacement_vs_prefetcher.png)
-
-LRU (Least Recently Used) LRU provides the best prediction by perfectly exploiting temporal 
-locality. It reliably evicts the block that has been unused for the longest time. 
-LFU (Least Frequently Used) LFU tracks cumulative access count, protecting the blocks used 
- 
-most over the long term. It can fail if a critical, non-repeating instruction block is evicted because 
-its count is low. 
-FIFO (First-In, First-Out) FIFO evicts the oldest block in the cache, ignoring how recently or 
-often it has been used. This complete disregard for temporal locality leads to poor performance 
-in cyclic workloads. 
-Random  Random  replacement  offers  no  predictive  ability  and  serves  as  the  performance 
-baseline. It will perform arbitrary evictions, resulting in the highest unnecessary miss rate. 
-LRU replacement policy performs the best out of all.
-
-![alt text](plot_3_benchmark_breakdown_fixed.png)
-
-We are using the Data Cache since we know that the Instruction will naturally be similar due to 
-the codes being  stored together. 
-There  are  a  lot  of  metrics  here  which  cover  all  the  replacement  policies,  and  prefetching 
-algorithms with the benchmarks we found or created and used. 
-We will be covering specific data points to perform our analysis. 
- 
-![alt text](plot_4_assoc_repl_benchmark_comparison.png)
-
-1-way (Direct Mapped): Lowest performance due to maximum Conflict Misses (blocks always 
-fight for the same slot). Check performance decrease in . 
-2-way & 4-way: Significantly reduces conflict misses, with 2-way giving the largest jump in hit 
-rate. 4-way offers minimal extra gain but approaches ideal mapping by reducing competition to 
-only Capacity Misses. 
- 
 ---
 
-## Conclusion
+## 1. **Average DL1 Hit Rate by Prefetcher Policy**
 
-The project delivers advanced cache replacement politices and dynamic prefetching in SimpleScalar, supporting diverse workload simulations. LFU improves cache block retention based on access frequency, while the stride prefetcher dynamically learns and exploits non-linear but regular memory access patterns. These improvements enable thorough evaluation and tuning of caching strategies for modern architectures.
+![DL1 Hit Rate by Prefetcher Policy](plot_1_prefetcher_comparison_normalized.jpg)
 
-For further details, please see the full project report: [ACA_Lab_Project_Report.pdf](./ACA_Lab_Project_Report.pdf)
+**Insight:**  
+- The **Next-Line Prefetcher** delivers the highest average DL1 hit rate, as it effectively exploits the strong spatial locality present in array-based benchmarks.
+- **No prefetching** (none) performs moderately, capturing hits that arise from purely temporal patterns.
+- The **Stride Prefetcher** performs worst in our suite, as our chosen benchmarks lack the large regular strides necessary for it to outperform next-line prefetching.
+
+---
+
+## 2. **DL1 Hit Rate by Replacement Policy and Prefetcher**
+
+![DL1 Hit Rate by Replacement Policy and Prefetcher](plot_2_replacement_vs_prefetcher.jpg)
+
+**Policy Descriptions & Observations:**  
+- **LRU (Least Recently Used)**: Excels by evicting the block that has been unused for the longest period. Leverages temporal locality and consistently yields the highest hit rates.
+- **LFU (Least Frequently Used)**: Protects frequently-used blocks over time, but can falter if blocks used non-repetitively and critically are evicted due to lower long-term count.
+- **FIFO (First-In, First-Out)**: Evicts blocks based purely on insertion order, disregarding usage, often resulting in poor performance in cyclical or temporal-locality-heavy workloads.
+- **Random**: Baseline; blocks are evicted arbitrarily, leading to erratic and generally poor performance.
+
+---
+
+## 3. **DL1 Hit Rate Breakdown by Benchmark**
+
+![DL1 Hit Rate Breakdown by Benchmark](plot_3_benchmark_breakdown_fixed.jpg)
+
+**Explanation:**  
+- All results here focus on **Data Cache (DL1)**, as instruction cache effects are naturally more uniform due to code colocation.
+- Each bar group compares all replacement and prefetcher configurations across our synthetic and real benchmarks.
+- This comprehensive breakdown is the backbone for detailed, per-benchmark analysis in the report.
+
+---
+
+## 4. **DL1 Hit Rate Across Associativities and Replacement Policies**
+
+![DL1 Hit Rate Across Associativities and Replacement Policies](plot_4_assoc_repl_benchmark_comparison.jpg)
+
+**Interpretation:**  
+- **1-way (Direct-Mapped):** Consistently lowest performance due to high conflict misses, as blocks frequently “fight” for the same cache slot.
+- **2-way / 4-way Set Associative:** Dramatic reduction in conflict misses; 2-way yields the biggest improvement, and 4-way approaches optimal capacity miss-only behavior.
+- The trend confirms classic cache design wisdom: modest increases in associativity can greatly enhance hit rates before returns diminish.
+
+---
+
+**Summary:**  
+These visualizations reinforce that the choice of replacement policy, prefetching logic, and cache associative structure is deeply workload-dependent. Next-line prefetching and high associativity suit spatially constrained, sequential workloads, while sophisticated policies like LFU and strided prefetching reveal their strengths only under targeted benchmarks with compatible access patterns.
+
+For further interpretation, methodology, and code details, consult [ACA_Lab_Project_Report.pdf](./ACA_Lab_Project_Report.pdf).
