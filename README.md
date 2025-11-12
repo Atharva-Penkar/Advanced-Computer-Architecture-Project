@@ -1,105 +1,107 @@
-# LFU Cache and Prefetcher Enhancements – Comprehensive Project Overview
+# Advanced Computer Architecture Project
+
+**Authors:**  
+Aditya Dhananjay Singh (22cs02001), Kumer Snehal (22cs02009), Aharva Atul Penkar (22cs02011)
+
+**Report:**  
+Refer to the detailed project report [ACA_Lab_Project_Report.pdf](./ACA_Lab_Project_Report.pdf)
+
+---
 
 ## Project Overview
-This project enhances the SimpleScalar cache simulator by implementing:
-- A **Least Frequently Used (LFU)** cache replacement policy.
-- Multiple **prefetcher policies**, specifically **none**, **next-line**, and **stride prefetching**.
 
-These additions provide the ability to simulate and analyze advanced cache behaviors for diverse workloads.
+This project enhances the SimpleScalar cache simulator by implementing:
+
+- A **Least Frequently Used (LFU)** cache replacement policy.
+- Multiple **prefetcher policies**: *None*, *Next-Line*, and *Stride Prefetching.*
+
+These extensions allow robust evaluation of cache behavior under diverse replacement and prefetch strategies.
 
 ---
 
-## Changes Made and Where
+## Changes Made and Locations
 
 ### 1. LFU Cache Policy
-- **File:** `cache.c`, `cache.h`  
-- **What:**  
-  - Added a `freq_count` field to each cache block to track access frequency.  
-  - In the LFU policy, on cache replacement, the block with the lowest `freq_count` is evicted.  
-  - Modified replacement logic in `cache_access()` to scan blocks for minimum frequency.  
-  - Increment `freq_count` on every hit or access to reflect block popularity.
+- **Location:** `cache.c`, `cache.h`  
+- **Details:**  
+  - Each cache block gains a `freq_count` tracking number of accesses.  
+  - LFU evicts the block with the lowest frequency on replacement.  
+  - Block frequency increments on every hit or access.  
+  - Replacement logic updated to scan and select minimum frequency block during eviction.
 
 ### 2. Prefetcher Support and Integration
-- **File:** `cache.c`, `cache.h`, simulator config  
-- **What:**  
-  - Extended the cache structure to include `enum prefetcher_policy prefetcher` and a dynamically allocated stride table.  
-  - `cache_create()` allocates stride table entries if stride prefetcher enabled.  
-  - Added command-line flag (`-prefetcher`) for selecting policy dynamically at runtime.  
-  - Prefetcher logic invoked on cache misses and slow hits during `cache_access()`.
+- **Location:** `cache.c`, `cache.h`, simulator config  
+- **Details:**  
+  - Cache struct extended with `enum prefetcher_policy prefetcher` and stride table allocation for stride prefetcher.  
+  - `cache_create()` initializes stride prefetcher structures when enabled.  
+  - Command-line option (`-prefetcher`) added for runtime prefetcher selection.  
+  - Prefetchers invoked on cache misses and slow hits within `cache_access()`.
 
 ---
 
-## How Each Prefetcher Works
+## How the Prefetchers Work
 
 ### Next-Line Prefetcher
-- **When:** Triggered on all misses and slow hits (new block accesses), not on fast hits (repeated block access).  
-- **Logic:** Always prefetches the immediately next sequential block (current block address + block size).  
-- **Use Case:** Ideal for workloads with sequential memory access patterns like linear array traversals.  
-- **Limitations:** Inefficient for sparse or irregular access patterns and may waste memory bandwidth.
+- **When:** On cache misses and slow hits. No prefetch on repeated fast hits.  
+- **Logic:** Always prefetch the immediately next consecutive cache block after the current one.  
+- **Use Case:** Sequential memory scans like array traversals.  
+- **Limitation:** Prefetches may waste bandwidth if access pattern is irregular.
 
 ### Stride Prefetcher
-- **When:** Triggered on misses and slow hits, but only issues prefetches after learning a stable stride pattern.  
+- **When:** On misses and slow hits, but only prefetches after learning a stable stride.  
 - **Logic:**  
-  - Maintains a stride table with entries storing last accessed block address, detected stride, and confidence.  
-  - Indexing of stride table uses XOR folding of block address bits to reduce collisions:
+  - Maintains a stride table indexed by XOR-folded block addresses to reduce collisions:
     ```
-    index = ((block_addr / block_size) ^ ((block_addr / block_size) >> 4)) % stride_table_size
+    index = ((block_addr / block_size) ^ ((block_addr / block_size) >> 4)) % stride_table_size;
     ```
-  - On each new access:
-    - Compute the stride as the difference from the last block address.  
-    - If stride matches stored stride, increase confidence (max 3).  
-    - If stride differs, update stride and reset confidence to 1 (enables rapid relearning).  
-  - Once confidence ≥ 1, prefetch the block at current block address + stride.  
-- **Use Case:** Best suited for workloads with regular, strided memory access patterns (e.g., matrix columns, strided scientific data).  
-- **Benefits:** Adapts to non-sequential predictable patterns and issues efficient prefetches, improving cache hit rates.
+  - Tracks last accessed block, stride, and confidence per table entry.  
+  - If current stride matches stored stride, increases confidence (max 3).  
+  - On stride change, resets confidence to 1 for quick relearning.  
+  - Once confidence ≥ 1, predicts next block address as current + stride and issues prefetch.  
+- **Use Case:** Regular but non-sequential patterns like strided matrix or scientific data access.  
+- **Benefit:** Adapts and prefetches more effectively in patterned, non-consecutive accesses.
 
 ---
 
 ## Prefetch Request Handling
-- Prefetch requests are **non-blocking** and overlap with normal execution to hide latency without stalling the CPU.
-- Miss handling and block replacements proceed as normal, ensuring prefetching is transparent to the processor pipeline.
-- The prefetcher runs without requiring the program counter (PC) by using address-based XOR folded hashing for indexing.
+- Prefetches are non-blocking, issued asynchronously to overlap with normal execution.  
+- Cache misses and evictions proceed normally, keeping prefetch transparent to CPU pipeline.  
+- Prefetcher avoids dependence on program counter by hashing block addresses with XOR folding for indexing.
 
 ---
 
-## Why These Changes Matter
+## Why These Enhancements Matter
 
-- **LFU Policy:** Evicts rarely accessed blocks, improving cache efficiency for programs with hotspots or uneven data reuse that LRU or FIFO may not capture.
-- **Next-Line Prefetcher:** Simple, predictable, works well for sequential patterns.
-- **Stride Prefetcher:** Captures more complex, regular access strides, leading to better performance on workloads with recurring access jumps.
-- **XOR Folding:** Balances indexing simplicity and effectiveness, minimizing aliasing without complicated PC tracking.
-- **Confidence Mechanism:** Avoids premature prefetching, reducing useless memory traffic and increasing accuracy.
+- **LFU** protects frequently used blocks better than recency-based policies, beneficial in workloads with hotspots.  
+- **Next-Line** exploits strong spatial locality in sequential workloads simply and efficiently.  
+- **Stride** intelligently prefetches non-sequential but regular accesses, improving cache performance in more complex applications.  
+- **XOR folding** reduces stride table collisions without adding PC tracking complexity.  
+- **Confidence mechanism** avoids premature or incorrect prefetches, increasing accuracy and reducing useless memory traffic.
 
 ---
 
 ## Practical Summary
 
-| Feature           | What It Does                               | Ideal For                          | Limitation                       |
-|-------------------|-------------------------------------------|----------------------------------|---------------------------------|
-| LFU Replacement   | Evicts least frequently used block        | Workloads with hotspots          | Slight overhead to track freq   |
-| Next-Line Prefetch| Prefetches next sequential cache block    | Strictly sequential data         | Inefficient for irregular pattern|
-| Stride Prefetch   | Detects and prefetches consistent strides | Strided and patterned access     | Needs repeated pattern & stable confidence |
+| Feature           | Description                                     | Ideal Use Case               | Limitation                    |
+|-------------------|------------------------------------------------|-----------------------------|-------------------------------|
+| LFU Replacement   | Evicts blocks used least frequently             | Hotspot-heavy workloads      | Requires tracking frequency     |
+| Next-Line Prefetch| Prefetches next consecutive block               | Sequential memory scans      | Inefficient for irregular access|
+| Stride Prefetch   | Learns stride pattern, prefetches accordingly   | Strided/patterned memory ops | Needs stable repetitive strides  |
 
 ---
 
 ## Usage
 
-- Set replacement policy: `:q` instead of `:l/r/f` in cache configuration for LFU replacement.
-- Set prefetcher policy: `-prefetcher=none`, `-prefetcher=next_line`, or `-prefetcher=stride`.
-- Run simulations to analyze performance impact using different configurations.
+- Set replacement: `-repl=lfu` for LFU, else `l`, `f`, or `r` for others.  
+- Set prefetcher: `-prefetcher=none`, `-prefetcher=next_line`, or `-prefetcher=stride`.  
+- Execute benchmarks and analyze cache hit rates to assess impact.
 
 ---
 
-## To Run
-You may use the existing shell script `runAll.sh` in order for the code to run:
-- `run_benchmarks.sh`: runs all benchmarks in ./benchmarks with all the cache configurations in ./cache_configs with all 3 prefetcher options.
-- `extract_data.sh`: goes over all the results stored in ./results directory plots the dl1 and il1 hit rates in `benchmarks_data.csv`.
-- `plotdata.py`: reads data from `ACAprojectdata.csv` which is manually cleaned data from `benchmarks_data.csv` and makes plots.
+## How to Run
 
-Steps:
-- chmod +x runAll.sh
-- ./runAll.sh
-
-## Conclusion
-
-This project enhances SimpleScalar with powerful cache and prefetcher options. LFU improves replacement decisions for non-uniform access, while stride prefetching adapts to pattern-based access, both extending simulator capability to realistically model advanced processor memory systems and optimize performance for diverse workloads.
+- Use the provided scripts:
+  - `runAll.sh` to automate runs across benchmarks and cache configs.  
+  - `extract_data.sh` to gather and prepare results.  
+  - `plotdata.py` to visualize benchmark outcomes.  
+- Make scripts executable with:  
