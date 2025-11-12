@@ -94,7 +94,7 @@ These extensions allow robust evaluation of cache behavior under diverse replace
 
 ## Usage
 
-- Set replacement: `-repl=lfu` for LFU, else `l`, `f`, or `r` for others.  
+- Set replacement: `:q` for LFU instead of `:l/r/f` in cache configuration file.  
 - Set prefetcher: `-prefetcher=none`, `-prefetcher=next_line`, or `-prefetcher=stride`.  
 - Execute benchmarks and analyze cache hit rates to assess impact.
 
@@ -102,11 +102,12 @@ These extensions allow robust evaluation of cache behavior under diverse replace
 
 ## How to Run
 
-- Use the provided scripts:
-  - `runAll.sh` to automate runs across benchmarks and cache configs.  
-  - `extract_data.sh` to gather and prepare results.  
-  - `plotdata.py` to visualize benchmark outcomes.  
-- Make scripts executable with:  
+- The following scripts exist to automate and ease the running of simulations:
+  - `run_benchmarks.sh`: runs all the benchmarks in `/benchmarks` with all the cache configurations `/cache_configs` with all the prefetchers options and stores the results in `/results`.
+  - `extract_data.sh`: goes over all the result files and stores the level 1 cache hit rates along with cache configurations and prefetcher options in `benchmarks_data.csv`.
+  - `plotdata.py`: reads the `benchmarks_data.csv` and plots the dl1 data and stores plots in root.
+
+You may run all in sequence using `runAll.sh`:
 ```
 chmod +x runAll.sh
 ./runAll.sh
