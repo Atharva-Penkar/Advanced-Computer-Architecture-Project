@@ -16,7 +16,6 @@ done
 echo "$header" > "$CSV_FILE"
 
 temp_file=$(mktemp)
-
 echo "Processing result files..."
 
 for result_file in "$RESULTS_DIR"/*; do
@@ -30,17 +29,31 @@ for result_file in "$RESULTS_DIR"/*; do
 
   il1_config_line=$(grep "^-cache:il1" "$result_file")
   il1_config=$(echo "$il1_config_line" | sed -n 's/.* \([^ ]*\) # l1 inst cache.*/\1/p')
-  
-  nsets=$(echo "$il1_config" | cut -d':' -f2)
-  bsize=$(echo "$il1_config" | cut -d':' -f3)
-  assoc=$(echo "$il1_config" | cut -d':' -f4)
-  repl=$(echo "$il1_config" | cut -d':' -f5)
+
+  # Safely parse parameters; default to NA if missing
+  if [ -z "$il1_config" ]; then
+    nsets="NA"; bsize="NA"; assoc="NA"; repl="NA"
+  else
+    nsets=$(echo "$il1_config" | cut -d':' -f2)
+    bsize=$(echo "$il1_config" | cut -d':' -f3)
+    assoc=$(echo "$il1_config" | cut -d':' -f4)
+    repl=$(echo "$il1_config" | cut -d':' -f5)
+  fi
 
   il1_miss_rate=$(grep "il1.miss_rate" "$result_file" | awk '{print $2}')
   dl1_miss_rate=$(grep "dl1.miss_rate" "$result_file" | awk '{print $2}')
-  
-  il1_hit_rate=$(echo "1 - $il1_miss_rate" | bc)
-  dl1_hit_rate=$(echo "1 - $dl1_miss_rate" | bc)
+
+  # Validate numbers before bc call or assign NA
+  if [[ $il1_miss_rate =~ ^[0-9]*\.?[0-9]+$ ]]; then
+    il1_hit_rate=$(echo "scale=4; 1 - $il1_miss_rate" | bc)
+  else
+    il1_hit_rate="NA"
+  fi
+  if [[ $dl1_miss_rate =~ ^[0-9]*\.?[0-9]+$ ]]; then
+    dl1_hit_rate=$(echo "scale=4; 1 - $dl1_miss_rate" | bc)
+  else
+    dl1_hit_rate="NA"
+  fi
 
   echo "${config_key},${nsets},${bsize},${assoc},${repl},${benchmark_name},${il1_hit_rate},${dl1_hit_rate}" >> "$temp_file"
 done
@@ -54,13 +67,11 @@ for config in $unique_configs; do
   for bench in $benchmarks; do
     il1_hr=$(grep "^${config},.*,${bench}," "$temp_file" | cut -d',' -f7)
     dl1_hr=$(grep "^${config},.*,${bench}," "$temp_file" | cut -d',' -f8)
-    
     csv_row+=",${il1_hr:-NA},${dl1_hr:-NA}"
   done
-  
+
   echo "$csv_row" >> "$CSV_FILE"
 done
 
 rm "$temp_file"
-
 echo "Processing complete. Summary report saved to $CSV_FILE"

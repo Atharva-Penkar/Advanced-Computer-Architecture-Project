@@ -3,20 +3,16 @@
 /* SimpleScalar(TM) Tool Suite
  * Copyright (C) 1994-2003 by Todd M. Austin, Ph.D. and SimpleScalar, LLC.
  * All Rights Reserved. 
- * 
- * THIS IS A LEGAL DOCUMENT, BY USING SIMPLESCALAR,
+ * * THIS IS A LEGAL DOCUMENT, BY USING SIMPLESCALAR,
  * YOU ARE AGREEING TO THESE TERMS AND CONDITIONS.
- * 
- * No portion of this work may be used by any commercial entity, or for any
+ * * No portion of this work may be used by any commercial entity, or for any
  * commercial purpose, without the prior, written permission of SimpleScalar,
  * LLC (info@simplescalar.com). Nonprofit and noncommercial use is permitted
  * as described below.
- * 
- * 1. SimpleScalar is provided AS IS, with no warranty of any kind, express
+ * * 1. SimpleScalar is provided AS IS, with no warranty of any kind, express
  * or implied. The user of the program accepts full responsibility for the
- * application of the program and the use of any results.
- * 
- * 2. Nonprofit and noncommercial use is encouraged. SimpleScalar may be
+ * application of the program and the use of any any results.
+ * * 2. Nonprofit and noncommercial use is encouraged. SimpleScalar may be
  * downloaded, compiled, executed, copied, and modified solely for nonprofit,
  * educational, noncommercial research, and noncommercial scholarship
  * purposes provided that this notice in its entirety accompanies all copies.
@@ -24,14 +20,11 @@
  * solely for nonprofit, educational, noncommercial research, and
  * noncommercial scholarship purposes provided that this notice in its
  * entirety accompanies all copies.
- * 
- * 3. ALL COMMERCIAL USE, AND ALL USE BY FOR PROFIT ENTITIES, IS EXPRESSLY
+ * * 3. ALL COMMERCIAL USE, AND ALL USE BY FOR PROFIT ENTITIES, IS EXPRESSLY
  * PROHIBITED WITHOUT A LICENSE FROM SIMPLESCALAR, LLC (info@simplescalar.com).
- * 
- * 4. No nonprofit user may place any restrictions on the use of this software,
+ * * 4. No nonprofit user may place any restrictions on the use of this software,
  * including as modified by the user, by any other authorized user.
- * 
- * 5. Noncommercial and nonprofit users may distribute copies of SimpleScalar
+ * * 5. Noncommercial and nonprofit users may distribute copies of SimpleScalar
  * in compiled or executable form as set forth in Section 2, provided that
  * either: (A) it is accompanied by the corresponding machine-readable source
  * code, or (B) it is accompanied by a written offer, with no time limit, to
@@ -40,18 +33,17 @@
  * must permit verbatim duplication by anyone, or (C) it is distributed by
  * someone who received only the executable form, and is accompanied by a
  * copy of the written offer of source code.
- * 
- * 6. SimpleScalar was developed by Todd M. Austin, Ph.D. The tool suite is
+ * * 6. SimpleScalar was developed by Todd M. Austin, Ph.D. The tool suite is
  * currently maintained by SimpleScalar LLC (info@simplescalar.com). US Mail:
  * 2395 Timbercrest Court, Ann Arbor, MI 48105.
- * 
- * Copyright (C) 1994-2003 by Todd M. Austin, Ph.D. and SimpleScalar, LLC.
+ * * Copyright (C) 1994-2003 by Todd M. Austin, Ph.D. and SimpleScalar, LLC.
  */
 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h> 
 
 #include "host.h"
 #include "misc.h"
@@ -139,10 +131,165 @@
 /* bound sqword_t/dfloat_t to positive int */
 #define BOUND_POS(N)		((int)(MIN(MAX(0, (N)), 2147483647)))
 
-static void cache_prefetch(struct cache_t *cp, md_addr_t addr, tick_t now) {
-    // Do a "dummy" read to bring the block into cache, ignore latency & data
-    cache_access(cp, Read, addr, NULL, cp->bsize, now, NULL, NULL);
+/* where to insert a block onto the ordered way chain (MOVED TO TOP LEVEL) */
+enum list_loc_t { Head, Tail };
+
+/* --- FORWARD DECLARATIONS (TO RESOLVE COMPILATION ERRORS) --- */
+/* Declare the static helper functions so cache_prefetch can use them */
+static void unlink_htab_ent(struct cache_t *cp,
+			    struct cache_set_t *set,
+			    struct cache_blk_t *blk);
+static void link_htab_ent(struct cache_t *cp,
+			  struct cache_set_t *set,
+			  struct cache_blk_t *blk);
+static void update_way_list(struct cache_set_t *set,
+			    struct cache_blk_t *blk,
+			    enum list_loc_t where); 
+/* Also need the core prefetch execution functions */
+static void cache_issue_prefetch(struct cache_t *cp, md_addr_t addr, tick_t now);
+static void cache_prefetch_logic(struct cache_t *cp, md_addr_t addr, tick_t now);
+/* --- END FORWARD DECLARATIONS --- */
+
+
+/*
+ * This is the NON-BLOCKING prefetch "engine".
+ * It probes the cache for `addr`. If the block is not present,
+ * it finds a replacement block, handles its writeback (if any),
+ * and issues a non-blocking read to fetch the block.
+ * It does NOT stall the CPU or return any latency.
+ */
+static void
+cache_issue_prefetch(struct cache_t *cp, md_addr_t addr, tick_t now)
+{
+  md_addr_t tag = CACHE_TAG(cp, addr);
+  md_addr_t set = CACHE_SET(cp, addr);
+  struct cache_blk_t *blk, *repl;
+  /* int lat = 0;  <-- This was unused */
+
+  /* 1. PROBE: Check if block is already present (a "prefetch hit") */
+  if (cache_probe(cp, addr)) {
+      /* Block is already here, do nothing. */
+      return;
+  }
+
+  /* 2. PREFETCH MISS: Block is not present. We need to fetch it. */
+  
+  /* 3. Find a block to replace (same as miss handler) */
+  switch (cp->policy) {
+    case LRU:
+    case FIFO:
+      repl = cp->sets[set].way_tail;
+      update_way_list(&cp->sets[set], repl, Head);
+      break;
+    case Random:
+      {
+        int bindex = myrand() & (cp->assoc - 1);
+        repl = CACHE_BINDEX(cp, cp->sets[set].blks, bindex);
+      }
+      break;
+    case LFU:
+      {
+        struct cache_blk_t *cur_blk = cp->sets[set].way_head;
+        struct cache_blk_t *min_blk = NULL;
+        unsigned int min_freq = (unsigned int)(-1);
+        for (int i = 0; i < cp->assoc; i++) {
+            if (cur_blk->freq_count < min_freq) {
+                min_freq = cur_blk->freq_count;
+                min_blk = cur_blk;
+            }
+            cur_blk = cur_blk->way_next;
+        }
+        repl = min_blk;
+        update_way_list(&cp->sets[set], repl, Head);
+      }
+      break;
+    default:
+      panic("bogus replacement policy");
+  }
+
+  /* 4. Handle replacement logic */
+  if (cp->hsize)
+    unlink_htab_ent(cp, &cp->sets[set], repl);
+
+  /* Do NOT touch last_tagset or last_blk! */
+
+  /* 5. Handle writeback of replaced block (NON-STALLING) */
+  if (repl->status & CACHE_BLK_VALID) {
+    /* Note: We increment writebacks here, but the actual latency is ignored
+     * as the main pipeline is not stalled by the prefetch writeback. */
+    if (repl->status & CACHE_BLK_DIRTY) {
+      cp->writebacks++;
+      /* Issue the write. We don't wait for it. */
+      cp->blk_access_fn(Write,
+                        CACHE_MK_BADDR(cp, repl->tag, set),
+                        cp->bsize, repl, now);
+    }
+  }
+
+  /* 6. Update block tags for the *new* prefetched block */
+  repl->tag = tag;
+  repl->status = CACHE_BLK_VALID; /* Mark as valid/ready when it eventually arrives */
+  repl->freq_count = 1; // For LFU
+
+  /* 7. Issue the read fetch (NON-STALLING) */
+  int read_latency = cp->blk_access_fn(Read,
+                                     CACHE_BADDR(cp, addr),
+                                     cp->bsize, repl, now);
+
+  /* 8. Set the block's ready time. The CPU does *not* wait for this. */
+  repl->ready = now + read_latency;
+
+  /* 9. Link block back into hash table */
+  if (cp->hsize)
+    link_htab_ent(cp, &cp->sets[set], repl);
 }
+
+/*
+ * This function contains your prefetcher logic.
+ * It is called on every *new* block access (miss or slow hit)
+ * to train the prefetcher and issue a prefetch.
+ */
+static void
+cache_prefetch_logic(struct cache_t *cp, md_addr_t addr, tick_t now)
+{
+    /* Get the block-aligned address for this access */
+    md_addr_t blk_addr = (addr & ~cp->blk_mask);
+
+    if (cp->prefetcher == PREF_NEXT_LINE) {
+        md_addr_t prefetch_addr = blk_addr + cp->bsize;
+        cache_issue_prefetch(cp, prefetch_addr, now);
+    }
+    else if (cp->prefetcher == PREF_STRIDE) {
+        /* Use block address to find the stride table entry */
+        int idx = (blk_addr / cp->bsize) % cp->stride_table_size;
+        struct stride_entry *e = &cp->stride_table[idx];
+        int stride_detected = 0;
+
+        /* Detect stride (in bytes, but based on block addresses) */
+        if (e->last_addr) {
+            int str = blk_addr - e->last_addr;
+            if (str == e->stride) {
+                if (e->confidence < 3) e->confidence++; /* Saturate confidence */
+            } else {
+                e->stride = str;
+                e->confidence = 0;
+            }
+            if (e->confidence >= 2 && e->stride != 0)
+                stride_detected = 1;
+        }
+        e->last_addr = blk_addr; /* Store the BLOCK address */
+
+        /* If confident, issue stride prefetch */
+        if (stride_detected) {
+            md_addr_t prefetch_addr = blk_addr + e->stride;
+            cache_issue_prefetch(cp, prefetch_addr, now);
+        }
+    }
+}
+/***************************************************************************/
+/* PREFETCHER HELPER FUNCTIONS: END */
+/***************************************************************************/
+
 /* unlink BLK from the hash table bucket chain in SET */
 static void
 unlink_htab_ent(struct cache_t *cp,		/* cache to update */
@@ -188,9 +335,6 @@ link_htab_ent(struct cache_t *cp,		/* cache to update */
   blk->hash_next = set->hash[index];
   set->hash[index] = blk;
 }
-
-/* where to insert a block onto the ordered way chain */
-enum list_loc_t { Head, Tail };
 
 /* insert BLK into the order way chain in SET at location WHERE */
 static void
@@ -513,15 +657,15 @@ cache_stats(struct cache_t *cp,		/* cache instance */
    at NOW, places pointer to block user data in *UDATA, *P is untouched if
    cache blocks are not allocated (!CP->BALLOC), UDATA should be NULL if no
    user data is attached to blocks */
-unsigned int				/* latency of access in cycles */
-cache_access(struct cache_t *cp,	/* cache to access */
-	     enum mem_cmd cmd,		/* access type, Read or Write */
-	     md_addr_t addr,		/* address of access */
-	     void *vp,			/* ptr to buffer for input/output */
-	     int nbytes,		/* number of bytes to access */
-	     tick_t now,		/* time of access */
-	     byte_t **udata,		/* for return of user data ptr */
-	     md_addr_t *repl_addr)	/* for address of replaced block */
+unsigned int        /* latency of access in cycles */
+cache_access(struct cache_t *cp,  /* cache to access */
+       enum mem_cmd cmd,    /* access type, Read or Write */
+       md_addr_t addr,    /* address of access */
+       void *vp,      /* ptr to buffer for input/output */
+       int nbytes,    /* number of bytes to access */
+       tick_t now,    /* time of access */
+       byte_t **udata,    /* for return of user data ptr */
+       md_addr_t *repl_addr)  /* for address of replaced block */
 {
   byte_t *p = vp;
   md_addr_t tag = CACHE_TAG(cp, addr);
@@ -560,29 +704,36 @@ cache_access(struct cache_t *cp,	/* cache to access */
       int hindex = CACHE_HASH(cp, tag);
 
       for (blk=cp->sets[set].hash[hindex];
-	   blk;
-	   blk=blk->hash_next)
-	{
-	  if (blk->tag == tag && (blk->status & CACHE_BLK_VALID))
-	    goto cache_hit;
-	}
+     blk;
+     blk=blk->hash_next)
+  {
+    if (blk->tag == tag && (blk->status & CACHE_BLK_VALID))
+      goto cache_hit;
+  }
     }
   else
     {
       /* low-associativity cache, linear search the way list */
       for (blk=cp->sets[set].way_head;
-	   blk;
-	   blk=blk->way_next)
-	{
-	  if (blk->tag == tag && (blk->status & CACHE_BLK_VALID))
-	    goto cache_hit;
-	}
+     blk;
+     blk=blk->way_next)
+  {
+    if (blk->tag == tag && (blk->status & CACHE_BLK_VALID))
+      goto cache_hit;
+  }
     }
 
   /* cache block not found */
 
   /* **MISS** */
   cp->misses++;
+
+  /*
+   * PREFETCHER:
+   * A miss is a new block access. Train the prefetcher and issue a prefetch.
+   */
+  if (cp->prefetcher)
+    cache_prefetch_logic(cp, addr, now);
 
   /* select the appropriate block to replace, and re-link this entry to
      the appropriate place in the way list */
@@ -639,7 +790,7 @@ cache_access(struct cache_t *cp,	/* cache to access */
       cp->replacements++;
 
       if (repl_addr)
-	*repl_addr = CACHE_MK_BADDR(cp, repl->tag, set);
+  *repl_addr = CACHE_MK_BADDR(cp, repl->tag, set);
  
       /* don't replace the block until outstanding misses are satisfied */
       lat += BOUND_POS(repl->ready - now);
@@ -651,25 +802,25 @@ cache_access(struct cache_t *cp,	/* cache to access */
       cp->bus_free = MAX(cp->bus_free, (now + lat)) + 1;
 
       if (repl->status & CACHE_BLK_DIRTY)
-	{
-	  /* write back the cache block */
-	  cp->writebacks++;
-	  lat += cp->blk_access_fn(Write,
-				   CACHE_MK_BADDR(cp, repl->tag, set),
-				   cp->bsize, repl, now+lat);
-	}
+  {
+    /* write back the cache block */
+    cp->writebacks++;
+    lat += cp->blk_access_fn(Write,
+           CACHE_MK_BADDR(cp, repl->tag, set),
+           cp->bsize, repl, now+lat);
+  }
     }
 
   /* update block tags */
   repl->tag = tag;
-  repl->status = CACHE_BLK_VALID;	/* dirty bit set on update */
+  repl->status = CACHE_BLK_VALID; /* dirty bit set on update */
   
   /* Initialize frequency count for LFU policy */
   repl->freq_count = 1;
 
   /* read data block */
   lat += cp->blk_access_fn(Read, CACHE_BADDR(cp, addr), cp->bsize,
-			   repl, now+lat);
+         repl, now+lat);
 
   /* copy data out of cache block */
   if (cp->balloc)
@@ -701,6 +852,13 @@ cache_access(struct cache_t *cp,	/* cache to access */
   /* **HIT** */
   cp->hits++;
   blk->freq_count++;
+
+  /*
+   * PREFETCHER:
+   * A slow hit is a new block access. Train the prefetcher and issue a prefetch.
+   */
+  if (cp->prefetcher)
+    cache_prefetch_logic(cp, addr, now);
 
   /* copy data out of cache block, if block exists */
   if (cp->balloc)
@@ -738,6 +896,13 @@ cache_access(struct cache_t *cp,	/* cache to access */
   cp->hits++;
   blk->freq_count++;
 
+  /*
+   * PREFETCHER:
+   * Do *NOT* call prefetch logic here. This is an access to
+   * the *same block* as the last access, and we would issue
+   * redundant prefetches and break the stride detector.
+   */
+
   /* copy data out of cache block, if block exists */
   if (cp->balloc)
     {
@@ -759,38 +924,6 @@ cache_access(struct cache_t *cp,	/* cache to access */
   /* record the last block to hit */
   cp->last_tagset = CACHE_TAGSET(cp, addr);
   cp->last_blk = blk;
-
-  if (cp->prefetcher == PREF_NEXT_LINE) {
-      md_addr_t prefetch_addr = addr + cp->bsize;
-      cache_prefetch(cp, prefetch_addr, now);
-  }
-  else if (cp->prefetcher == PREF_STRIDE) {
-      // Simple stride prefetch (by address, not PC)
-      int idx = (addr / cp->bsize) % cp->stride_table_size;
-      struct stride_entry *e = &cp->stride_table[idx];
-      int stride_detected = 0;
-
-      // Detect stride
-      if (e->last_addr) {
-          int str = addr - e->last_addr;
-          if (str == e->stride)
-              e->confidence++;
-          else {
-              e->stride = str;
-              e->confidence = 0;
-          }
-          if (e->confidence >= 2 && e->stride != 0)
-              stride_detected = 1;
-      }
-      e->last_addr = addr;
-
-      // If confident, issue stride prefetch
-      if (stride_detected) {
-          md_addr_t prefetch_addr = addr + e->stride;
-          cache_prefetch(cp, prefetch_addr, now);
-      }
-  }
-
 
   /* return first cycle data is available to access */
   return (int) MAX(cp->hit_latency, (blk->ready - now));
