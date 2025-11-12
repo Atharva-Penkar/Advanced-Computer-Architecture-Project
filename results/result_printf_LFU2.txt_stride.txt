@@ -1,0 +1,359 @@
+sim-cache: SimpleScalar/PISA Tool Set version 3.0 of March, 2023.
+Copyright (c) 1994-2003 by Todd M. Austin, Ph.D. and SimpleScalar, LLC.
+All Rights Reserved. This version of SimpleScalar is licensed for academic
+non-commercial use.  No portion of this work may be used by any commercial
+entity, or for any commercial purpose, without the prior written permission
+of SimpleScalar, LLC (info@simplescalar.com).
+
+sim: command line: ./simplescalar/simplesim-3.0/sim-cache -prefetcher stride -config ./cache_configs/LFU2.txt ./benchmarks/printf 
+
+sim: simulation started @ Wed Nov 12 16:39:13 2025, options follow:
+
+sim-cache: This simulator implements a functional cache simulator.  Cache
+statistics are generated for a user-selected cache and TLB configuration,
+which may include up to two levels of instruction and data cache (with any
+levels unified), and one level of instruction and data TLBs.  No timing
+information is generated.
+
+# -config                     # load configuration from a file
+# -dumpconfig                 # dump configuration to a file
+# -h                    false # print help message    
+# -v                    false # verbose operation     
+# -d                    false # enable debug message  
+# -i                    false # start in Dlite debugger
+-seed                       1 # random number generator seed (0 for timer seed)
+# -q                    false # initialize and terminate immediately
+# -chkpt               <null> # restore EIO trace execution from <fname>
+# -redir:sim           <null> # redirect simulator output to file (non-interactive only)
+# -redir:prog          <null> # redirect simulated program output to file
+-nice                       0 # simulator scheduling priority
+-max:inst                   0 # maximum number of inst's to execute
+-cache:dl1       dl1:32:16:2:q # l1 data cache config, i.e., {<config>|none}
+-cache:dl2               none # l2 data cache config, i.e., {<config>|none}
+-cache:il1       il1:32:16:2:q # l1 inst cache config, i.e., {<config>|dl1|dl2|none}
+-cache:il2               none # l2 instruction cache config, i.e., {<config>|dl2|none}
+-tlb:itlb        itlb:16:4096:4:l # instruction TLB config, i.e., {<config>|none}
+-tlb:dtlb        dtlb:32:4096:4:l # data TLB config, i.e., {<config>|none}
+-flush                  false # flush caches on system calls
+-cache:icompress        false # convert 64-bit inst addresses to 32-bit inst equivalents
+# -pcstat              <null> # profile stat(s) against text addr's (mult uses ok)
+-prefetcher            stride # prefetcher type {none|next_line|stride}
+
+  The cache config parameter <config> has the following format:
+
+    <name>:<nsets>:<bsize>:<assoc>:<repl>
+
+    <name>   - name of the cache being defined
+    <nsets>  - number of sets in the cache
+    <bsize>  - block size of the cache
+    <assoc>  - associativity of the cache
+    <repl>   - block replacement strategy, 'l'-LRU, 'f'-FIFO, 'r'-random
+
+    Examples:   -cache:dl1 dl1:4096:32:1:l
+                -dtlb dtlb:128:4096:32:r
+
+  Cache levels can be unified by pointing a level of the instruction cache
+  hierarchy at the data cache hiearchy using the "dl1" and "dl2" cache
+  configuration arguments.  Most sensible combinations are supported, e.g.,
+
+    A unified l2 cache (il2 is pointed at dl2):
+      -cache:il1 il1:128:64:1:l -cache:il2 dl2
+      -cache:dl1 dl1:256:32:1:l -cache:dl2 ul2:1024:64:2:l
+
+    Or, a fully unified cache hierarchy (il1 pointed at dl1):
+      -cache:il1 dl1
+      -cache:dl1 ul1:256:32:1:l -cache:dl2 ul2:1024:64:2:l
+
+
+
+sim: ** starting functional simulation w/ caches **
+%.4x:	`0012'
+%04x:	`0012'
+%4.4x:	`0012'
+%04.4x:	`0012'
+%4.3x:	` 012'
+%04.3x:	`0012'
+%.*x:	`0012'
+%0*x:	`0012'
+%*.*x:	`0012'
+%0*.*x:	`0012'
+bad format:	"%z"
+nil pointer (padded):	"     (nil)"
+decimal negative:	"-2345"
+octal negative:	"37777773327"
+hex negative:	"fffff6d7"
+long decimal number:	"-123456"
+long octal negative:	"37777773327"
+long unsigned decimal number:	"4294843840"
+zero-padded LDN:	"-000123456"
+left-adjusted ZLDN:	"-123456   "
+space-padded LDN:	"   -123456"
+left-adjusted SLDN:	"-123456   "
+zero-padded string:	"    Hi, Z."
+left-adjusted Z string:	"Hi, Z.    "
+space-padded string:	"    Hi, Z."
+left-adjusted S string:	"Hi, Z.    "
+null string:	"(null)"
+e-style >= 1:	"1.234000e+01"
+e-style >= .1:	"1.234000e-01"
+e-style < .1:	"1.234000e-03"
+e-style big:	"1.000000000000000000000000000000000000000000000000000000000000e+20"
+e-style == .1:	"1.000000e-01"
+f-style >= 1:	"12.340000"
+f-style >= .1:	"0.123400"
+f-style < .1:	"0.001234"
+g-style >= 1:	"12.34"
+g-style >= .1:	"0.1234"
+g-style < .1:	"0.00123"
+g-style big:	"100000000000000000000"
+:new test: 99.85:
+ 0.10000
+ 0.10000
+x0.5000x
+0x1
+|      0.0000|  0.0000e+00|           0|
+|      1.0000|  1.0000e+00|           1|
+|     -1.0000| -1.0000e+00|          -1|
+|    100.0000|  1.0000e+02|         100|
+|   1000.0000|  1.0000e+03|        1000|
+|  10000.0000|  1.0000e+04|       1e+04|
+|  12345.0000|  1.2345e+04|   1.235e+04|
+| 100000.0000|  1.0000e+05|       1e+05|
+| 123456.0000|  1.2346e+05|   1.235e+05|
+
+Formatted output test
+prefix  6d      6o      6x      6X      6u
+%-+#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+# |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+0 |-123   |377    |ff     |FF     |4294967295 |
+  %-+ |-123   |377    |ff     |FF     |4294967295 |
+ %-#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-# |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-0 |-123   |377    |ff     |FF     |4294967295 |
+   %- |-123   |377    |ff     |FF     |4294967295 |
+ %+#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+  %+# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+  %+0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+   %+ |  -123 |   377 |    ff |    FF |4294967295 |
+  %#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+   %# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+   %0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+    % |  -123 |   377 |    ff |    FF |4294967295 |
+    (null)
+(null)    
+
+Formatted output test
+prefix  6d      6o      6x      6X      6u
+%-+#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+# |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+0 |-123   |377    |ff     |FF     |4294967295 |
+  %-+ |-123   |377    |ff     |FF     |4294967295 |
+ %-#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-# |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-0 |-123   |377    |ff     |FF     |4294967295 |
+   %- |-123   |377    |ff     |FF     |4294967295 |
+ %+#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+  %+# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+  %+0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+   %+ |  -123 |   377 |    ff |    FF |4294967295 |
+  %#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+   %# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+   %0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+    % |  -123 |   377 |    ff |    FF |4294967295 |
+    (null)
+(null)    
+
+Formatted output test
+prefix  6d      6o      6x      6X      6u
+%-+#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+# |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+0 |-123   |377    |ff     |FF     |4294967295 |
+  %-+ |-123   |377    |ff     |FF     |4294967295 |
+ %-#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-# |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-0 |-123   |377    |ff     |FF     |4294967295 |
+   %- |-123   |377    |ff     |FF     |4294967295 |
+ %+#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+  %+# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+  %+0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+   %+ |  -123 |   377 |    ff |    FF |4294967295 |
+  %#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+   %# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+   %0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+    % |  -123 |   377 |    ff |    FF |4294967295 |
+    (null)
+(null)    
+
+Formatted output test
+prefix  6d      6o      6x      6X      6u
+%-+#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+# |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+0 |-123   |377    |ff     |FF     |4294967295 |
+  %-+ |-123   |377    |ff     |FF     |4294967295 |
+ %-#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-# |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-0 |-123   |377    |ff     |FF     |4294967295 |
+   %- |-123   |377    |ff     |FF     |4294967295 |
+ %+#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+  %+# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+  %+0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+   %+ |  -123 |   377 |    ff |    FF |4294967295 |
+  %#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+   %# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+   %0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+    % |  -123 |   377 |    ff |    FF |4294967295 |
+    (null)
+(null)    
+
+Formatted output test
+prefix  6d      6o      6x      6X      6u
+%-+#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+# |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+0 |-123   |377    |ff     |FF     |4294967295 |
+  %-+ |-123   |377    |ff     |FF     |4294967295 |
+ %-#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-# |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-0 |-123   |377    |ff     |FF     |4294967295 |
+   %- |-123   |377    |ff     |FF     |4294967295 |
+ %+#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+  %+# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+  %+0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+   %+ |  -123 |   377 |    ff |    FF |4294967295 |
+  %#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+   %# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+   %0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+    % |  -123 |   377 |    ff |    FF |4294967295 |
+    (null)
+(null)    
+
+Formatted output test
+prefix  6d      6o      6x      6X      6u
+%-+#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+# |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+0 |-123   |377    |ff     |FF     |4294967295 |
+  %-+ |-123   |377    |ff     |FF     |4294967295 |
+ %-#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-# |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-0 |-123   |377    |ff     |FF     |4294967295 |
+   %- |-123   |377    |ff     |FF     |4294967295 |
+ %+#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+  %+# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+  %+0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+   %+ |  -123 |   377 |    ff |    FF |4294967295 |
+  %#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+   %# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+   %0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+    % |  -123 |   377 |    ff |    FF |4294967295 |
+    (null)
+(null)    
+
+Formatted output test
+prefix  6d      6o      6x      6X      6u
+%-+#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+# |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+0 |-123   |377    |ff     |FF     |4294967295 |
+  %-+ |-123   |377    |ff     |FF     |4294967295 |
+ %-#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-# |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-0 |-123   |377    |ff     |FF     |4294967295 |
+   %- |-123   |377    |ff     |FF     |4294967295 |
+ %+#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+  %+# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+  %+0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+   %+ |  -123 |   377 |    ff |    FF |4294967295 |
+  %#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+   %# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+   %0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+    % |  -123 |   377 |    ff |    FF |4294967295 |
+    (null)
+(null)    
+
+Formatted output test
+prefix  6d      6o      6x      6X      6u
+%-+#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+# |-123   |0377   |0xff   |0XFF   |4294967295 |
+ %-+0 |-123   |377    |ff     |FF     |4294967295 |
+  %-+ |-123   |377    |ff     |FF     |4294967295 |
+ %-#0 |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-# |-123   |0377   |0xff   |0XFF   |4294967295 |
+  %-0 |-123   |377    |ff     |FF     |4294967295 |
+   %- |-123   |377    |ff     |FF     |4294967295 |
+ %+#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+  %+# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+  %+0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+   %+ |  -123 |   377 |    ff |    FF |4294967295 |
+  %#0 |-00123 |000377 |0x00ff |0X00FF |4294967295 |
+   %# |  -123 |  0377 |  0xff |  0XFF |4294967295 |
+   %0 |-00123 |000377 |0000ff |0000FF |4294967295 |
+    % |  -123 |   377 |    ff |    FF |4294967295 |
+    (null)
+(null)    
+1.234568e+06 should be 1.234568e+06
+1234567.800000 should be 1234567.800000
+1.23457e+06 should be 1.23457e+06
+123.456 should be 123.456
+1e+06 should be 1e+06
+10 should be 10
+0.02 should be 0.02
+testing parametric fields: 0.7000
+
+sim: ** simulation statistics **
+sim_num_insn                1259843 # total number of instructions executed
+sim_num_refs                 295673 # total number of loads and stores executed
+sim_elapsed_time                  1 # total simulation time in seconds
+sim_inst_rate          1259843.0000 # simulation speed (in insts/sec)
+il1.accesses                1259843 # total number of accesses
+il1.hits                     715353 # total number of hits
+il1.misses                   544490 # total number of misses
+il1.replacements             544432 # total number of replacements
+il1.writebacks                    0 # total number of writebacks
+il1.invalidations                 0 # total number of invalidations
+il1.miss_rate                0.4322 # miss rate (i.e., misses/ref)
+il1.repl_rate                0.4321 # replacement rate (i.e., repls/ref)
+il1.wb_rate                  0.0000 # writeback rate (i.e., wrbks/ref)
+il1.inv_rate                 0.0000 # invalidation rate (i.e., invs/ref)
+dl1.accesses                 310159 # total number of accesses
+dl1.hits                     289590 # total number of hits
+dl1.misses                    20569 # total number of misses
+dl1.replacements              20513 # total number of replacements
+dl1.writebacks                10520 # total number of writebacks
+dl1.invalidations                 0 # total number of invalidations
+dl1.miss_rate                0.0663 # miss rate (i.e., misses/ref)
+dl1.repl_rate                0.0661 # replacement rate (i.e., repls/ref)
+dl1.wb_rate                  0.0339 # writeback rate (i.e., wrbks/ref)
+dl1.inv_rate                 0.0000 # invalidation rate (i.e., invs/ref)
+itlb.accesses               1259843 # total number of accesses
+itlb.hits                   1259824 # total number of hits
+itlb.misses                      19 # total number of misses
+itlb.replacements                 0 # total number of replacements
+itlb.writebacks                   0 # total number of writebacks
+itlb.invalidations                0 # total number of invalidations
+itlb.miss_rate               0.0000 # miss rate (i.e., misses/ref)
+itlb.repl_rate               0.0000 # replacement rate (i.e., repls/ref)
+itlb.wb_rate                 0.0000 # writeback rate (i.e., wrbks/ref)
+itlb.inv_rate                0.0000 # invalidation rate (i.e., invs/ref)
+dtlb.accesses                310159 # total number of accesses
+dtlb.hits                    310150 # total number of hits
+dtlb.misses                       9 # total number of misses
+dtlb.replacements                 0 # total number of replacements
+dtlb.writebacks                   0 # total number of writebacks
+dtlb.invalidations                0 # total number of invalidations
+dtlb.miss_rate               0.0000 # miss rate (i.e., misses/ref)
+dtlb.repl_rate               0.0000 # replacement rate (i.e., repls/ref)
+dtlb.wb_rate                 0.0000 # writeback rate (i.e., wrbks/ref)
+dtlb.inv_rate                0.0000 # invalidation rate (i.e., invs/ref)
+ld_text_base             0x00400000 # program text (code) segment base
+ld_text_size                  74640 # program text (code) size in bytes
+ld_data_base             0x10000000 # program initialized data segment base
+ld_data_size                  13636 # program init'ed `.data' and uninit'ed `.bss' size in bytes
+ld_stack_base            0x7fffc000 # program stack segment base (highest address in stack)
+ld_stack_size                 16384 # program initial stack size
+ld_prog_entry            0x00400140 # program entry point (initial PC)
+ld_environ_base          0x7fff8000 # program environment base address address
+ld_target_big_endian              0 # target executable endian-ness, non-zero if big endian
+mem.page_count                   29 # total number of pages allocated
+mem.page_mem                   116k # total size of memory pages allocated
+mem.ptab_misses                  30 # total first level page table misses
+mem.ptab_accesses           6130559 # total page table accesses
+mem.ptab_miss_rate           0.0000 # first level page table miss rate
+
