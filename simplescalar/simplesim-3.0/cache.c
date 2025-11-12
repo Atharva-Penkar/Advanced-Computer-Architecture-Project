@@ -161,6 +161,7 @@ static void cache_prefetch_logic(struct cache_t *cp, md_addr_t addr, tick_t now)
 static void
 cache_issue_prefetch(struct cache_t *cp, md_addr_t addr, tick_t now)
 {
+  printf("[Prefetch] Issuing prefetch for addr: 0x%llx at time %llu\n", (unsigned long long)addr, (unsigned long long)now);
   md_addr_t tag = CACHE_TAG(cp, addr);
   md_addr_t set = CACHE_SET(cp, addr);
   struct cache_blk_t *blk, *repl;
@@ -252,40 +253,45 @@ cache_issue_prefetch(struct cache_t *cp, md_addr_t addr, tick_t now)
 static void
 cache_prefetch_logic(struct cache_t *cp, md_addr_t addr, tick_t now)
 {
-    /* Get the block-aligned address for this access */
     md_addr_t blk_addr = (addr & ~cp->blk_mask);
 
     if (cp->prefetcher == PREF_NEXT_LINE) {
         md_addr_t prefetch_addr = blk_addr + cp->bsize;
+        printf("[Prefetch] Next-Line prefetch issued for addr: 0x%llx\n", (unsigned long long)prefetch_addr);
         cache_issue_prefetch(cp, prefetch_addr, now);
     }
     else if (cp->prefetcher == PREF_STRIDE) {
-        /* Use block address to find the stride table entry */
         int idx = (blk_addr / cp->bsize) % cp->stride_table_size;
         struct stride_entry *e = &cp->stride_table[idx];
-        int stride_detected = 0;
 
-        /* Detect stride (in bytes, but based on block addresses) */
+        printf("[Prefetch] Stride prefetcher index %d, last_addr=0x%llx, curr_addr=0x%llx\n", idx, (unsigned long long)e->last_addr, (unsigned long long)blk_addr);
+
+        int stride_detected = 0;
         if (e->last_addr) {
             int str = blk_addr - e->last_addr;
+            printf("[Prefetch] Calculated stride: %d, previous stride: %d, confidence: %d\n", str, e->stride, e->confidence);
+
             if (str == e->stride) {
-                if (e->confidence < 3) e->confidence++; /* Saturate confidence */
+                if (e->confidence < 3) e->confidence++;
+                printf("[Prefetch] Incremented confidence to %d\n", e->confidence);
             } else {
                 e->stride = str;
                 e->confidence = 0;
+                printf("[Prefetch] Stride changed. Reset confidence to 0\n");
             }
             if (e->confidence >= 2 && e->stride != 0)
                 stride_detected = 1;
         }
-        e->last_addr = blk_addr; /* Store the BLOCK address */
+        e->last_addr = blk_addr;
 
-        /* If confident, issue stride prefetch */
         if (stride_detected) {
             md_addr_t prefetch_addr = blk_addr + e->stride;
+            printf("[Prefetch] Stride prefetch issued for addr: 0x%llx\n", (unsigned long long)prefetch_addr);
             cache_issue_prefetch(cp, prefetch_addr, now);
         }
     }
 }
+
 /***************************************************************************/
 /* PREFETCHER HELPER FUNCTIONS: END */
 /***************************************************************************/
@@ -732,8 +738,10 @@ cache_access(struct cache_t *cp,  /* cache to access */
    * PREFETCHER:
    * A miss is a new block access. Train the prefetcher and issue a prefetch.
    */
-  if (cp->prefetcher)
+  if (cp->prefetcher){
+    printf("[Cache] Cache miss/access at addr 0x%llx, triggering prefetcher %d\n", (unsigned long long)addr, cp->prefetcher);
     cache_prefetch_logic(cp, addr, now);
+  }
 
   /* select the appropriate block to replace, and re-link this entry to
      the appropriate place in the way list */
