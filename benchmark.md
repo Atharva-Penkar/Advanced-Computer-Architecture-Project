@@ -122,3 +122,55 @@ This benchmark simulates a shifting working set where old, frequently used data 
 | **Overall Stress** | **Working Set Adaptation** | Challenges LFU to quickly evict blocks with historically high counts. LRU typically performs well here. |
 
 **Expected Outcome:** LRU should perform well, while a naïve LFU implementation may struggle due to its reliance on outdated historical frequency data.
+
+</br>
+</br>
+</br>
+</br>
+</br>
+</br>
+</br>
+</br>
+
+![alt text](plot_1_prefetcher_comparison_normalized.png)
+
+We  have  taken  the  average  of  DL1  hit  rates  across  all  the  benchmarks  and  replacement 
+policies. 
+The graph indicates that the next line prefetcher delivers the best performance. This superior 
+result  is  attributed  to  the  spatial  locality  present  in  the arrays within most of our benchmark 
+codes, which the next line prefetcher effectively exploits.  
+Following this, the prefetcher with no specific settings shows intermediate performance. 
+Conversely,  the  stride  prefetcher  performs  poorly  because  the  benchmarks  lack  the  large 
+strides required for it to be effective.
+
+![alt text](plot_2_replacement_vs_prefetcher.png)
+
+LRU (Least Recently Used) LRU provides the best prediction by perfectly exploiting temporal 
+locality. It reliably evicts the block that has been unused for the longest time. 
+LFU (Least Frequently Used) LFU tracks cumulative access count, protecting the blocks used 
+ 
+most over the long term. It can fail if a critical, non-repeating instruction block is evicted because 
+its count is low. 
+FIFO (First-In, First-Out) FIFO evicts the oldest block in the cache, ignoring how recently or 
+often it has been used. This complete disregard for temporal locality leads to poor performance 
+in cyclic workloads. 
+Random  Random  replacement  offers  no  predictive  ability  and  serves  as  the  performance 
+baseline. It will perform arbitrary evictions, resulting in the highest unnecessary miss rate. 
+LRU replacement policy performs the best out of all.
+
+![alt text](plot_3_benchmark_breakdown_fixed.png)
+
+We are using the Data Cache since we know that the Instruction will naturally be similar due to 
+the codes being  stored together. 
+There  are  a  lot  of  metrics  here  which  cover  all  the  replacement  policies,  and  prefetching 
+algorithms with the benchmarks we found or created and used. 
+We will be covering specific data points to perform our analysis. 
+ 
+![alt text](plot_4_assoc_repl_benchmark_comparison.png)
+
+1-way (Direct Mapped): Lowest performance due to maximum Conflict Misses (blocks always 
+fight for the same slot). Check performance decrease in . 
+2-way & 4-way: Significantly reduces conflict misses, with 2-way giving the largest jump in hit 
+rate. 4-way offers minimal extra gain but approaches ideal mapping by reducing competition to 
+only Capacity Misses. 
+ 
