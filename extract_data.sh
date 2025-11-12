@@ -55,7 +55,7 @@ for result_file in "$RESULTS_DIR"/*; do
     dl1_hit_rate="NA"
   fi
 
-  echo "${prefetcher_name},${nsets},${bsize},${assoc},${repl},${benchmark_name},${il1_hit_rate},${dl1_hit_rate}" >> "$temp_file"
+  echo "${config_key},${nsets},${bsize},${assoc},${repl},${benchmark_name},${il1_hit_rate},${dl1_hit_rate}" >> "$temp_file"
 done
 
 unique_configs=$(cut -d',' -f1 "$temp_file" | sort -u)

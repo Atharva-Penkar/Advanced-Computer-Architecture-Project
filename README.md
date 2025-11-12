@@ -105,13 +105,24 @@ These extensions allow robust evaluation of cache behavior under diverse replace
 - The following scripts exist to automate and ease the running of simulations:
   - `run_benchmarks.sh`: runs all the benchmarks in `/benchmarks` with all the cache configurations `/cache_configs` with all the prefetchers options and stores the results in `/results`.
   - `extract_data.sh`: goes over all the result files and stores the level 1 cache hit rates along with cache configurations and prefetcher options in `benchmarks_data.csv`.
-  - `plotdata.py`: reads the `benchmarks_data.csv` and plots the dl1 data and stores plots in root.
+  - You may run all in sequence using `runAll.sh`:
+    ```
+    chmod +x runAll.sh
+    ./runAll.sh
+    ```
+  - Activating python virtual environment
+  ```
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install numpy pandas matplotlib
+  ```
+  - Running python code
+  ```
+    python plotdata.py
+  ```
+  - `plotdata.py`: reads the `ACAprojectdata.csv` (which is `benchmarks_data.csv` with the first column manually cleaned) and plots the dl1 data and stores plots in root.
 
-You may run all in sequence using `runAll.sh`:
-```
-chmod +x runAll.sh
-./runAll.sh
-```
+
 ---
 
 # Cache Benchmark Suite
