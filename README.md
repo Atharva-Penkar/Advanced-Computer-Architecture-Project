@@ -1,7 +1,9 @@
 # Advanced Computer Architecture Project
 
 **Authors:**  
-Aditya Dhananjay Singh (22cs02001), Kumer Snehal (22cs02009), Aharva Atul Penkar (22cs02011)
+Aditya Dhananjay Singh (22cs02001)
+Kumar Snehal (22cs02009)
+Atharva Atul Penkar (22cs02011)
 
 **Report:**  
 Refer to the detailed project report [ACA_Lab_Project_Report.pdf](./ACA_Lab_Project_Report.pdf)
@@ -105,3 +107,8 @@ These extensions allow robust evaluation of cache behavior under diverse replace
   - `extract_data.sh` to gather and prepare results.  
   - `plotdata.py` to visualize benchmark outcomes.  
 - Make scripts executable with:  
+```
+chmod +x runAll.sh
+./runAll.sh
+```
+
