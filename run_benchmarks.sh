@@ -4,6 +4,9 @@ SIM_CACHE_EXEC="./simplescalar/simplesim-3.0/sim-cache"
 BENCHMARK_DIR="./benchmarks"
 CONFIG_DIR="./cache_configs"
 RESULTS_DIR="./results"
+if [ ! -d "$RESULTS_DIR" ]; then
+  mkdir -p "$RESULTS_DIR"
+fi
 
 PREFETCHER_TYPES=("none" "next_line" "stride")
 MAX_JOBS=24  # Max number of concurrent jobs
