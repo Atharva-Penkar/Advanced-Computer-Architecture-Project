@@ -8,7 +8,7 @@ if [ ! -d "$RESULTS_DIR" ]; then
   exit 1
 fi
 
-header="Config,nsets,bsize,assoc,repl"
+header="prefetcher,nsets,bsize,assoc,repl"
 benchmarks=$(ls -1 "$RESULTS_DIR" | sed -n 's/result_\([^_]*\)_.*/\1/p' | sort -u)
 for bench in $benchmarks; do
   header+=",${bench}_il1_hit_rate,${bench}_dl1_hit_rate"
@@ -55,7 +55,7 @@ for result_file in "$RESULTS_DIR"/*; do
     dl1_hit_rate="NA"
   fi
 
-  echo "${config_key},${nsets},${bsize},${assoc},${repl},${benchmark_name},${il1_hit_rate},${dl1_hit_rate}" >> "$temp_file"
+  echo "${prefetcher_name},${nsets},${bsize},${assoc},${repl},${benchmark_name},${il1_hit_rate},${dl1_hit_rate}" >> "$temp_file"
 done
 
 unique_configs=$(cut -d',' -f1 "$temp_file" | sort -u)

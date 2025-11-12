@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-CSV_PATH = "/home/atharva/iitbbs/semester7/aca_laboratory/Advanced-Computer-Architecture-Project/ACAprojectdata.csv"
+CSV_PATH = "./benchmarks_data.csv"
 
 def load_and_preprocess_data(csv_path):
     try:
