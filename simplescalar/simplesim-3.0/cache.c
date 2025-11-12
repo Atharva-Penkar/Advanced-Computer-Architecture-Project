@@ -267,7 +267,8 @@ cache_prefetch_logic(struct cache_t *cp, md_addr_t addr, tick_t now)
         if (e->last_addr) {
             int str = blk_addr - e->last_addr;
             if (str == e->stride) {
-                if (e->confidence < 3) e->confidence++;
+                if (e->confidence < 3) 
+                  e->confidence++;
             } else {
                 e->stride = str;
                 e->confidence = 1;  // Start confidence at 1 for faster detection
@@ -279,7 +280,6 @@ cache_prefetch_logic(struct cache_t *cp, md_addr_t addr, tick_t now)
 
         if (stride_detected) {
             md_addr_t prefetch_addr = blk_addr + e->stride;
-            // Optional: you can add bounds checking if you know memory limits here
 
             cache_issue_prefetch(cp, prefetch_addr, now);
         }
