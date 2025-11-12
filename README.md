@@ -247,7 +247,7 @@ This section visualizes the impact of different cache replacement and prefetcher
 
 ## 1. **Average DL1 Hit Rate by Prefetcher Policy**
 
-![DL1 Hit Rate by Prefetcher Policy](plot_1_prefetcher_comparison_normalized.jpg)
+![alt text](plot_1_prefetcher_comparison_normalized.png)
 
 **Insight:**  
 - The **Next-Line Prefetcher** delivers the highest average DL1 hit rate, as it effectively exploits the strong spatial locality present in array-based benchmarks.
@@ -258,7 +258,7 @@ This section visualizes the impact of different cache replacement and prefetcher
 
 ## 2. **DL1 Hit Rate by Replacement Policy and Prefetcher**
 
-![DL1 Hit Rate by Replacement Policy and Prefetcher](plot_2_replacement_vs_prefetcher.jpg)
+![alt text](plot_2_replacement_vs_prefetcher.png)
 
 **Policy Descriptions & Observations:**  
 - **LRU (Least Recently Used)**: Excels by evicting the block that has been unused for the longest period. Leverages temporal locality and consistently yields the highest hit rates.
@@ -270,7 +270,7 @@ This section visualizes the impact of different cache replacement and prefetcher
 
 ## 3. **DL1 Hit Rate Breakdown by Benchmark**
 
-![DL1 Hit Rate Breakdown by Benchmark](plot_3_benchmark_breakdown_fixed.jpg)
+![alt text](plot_3_benchmark_breakdown_fixed.png)
 
 **Explanation:**  
 - All results here focus on **Data Cache (DL1)**, as instruction cache effects are naturally more uniform due to code colocation.
@@ -281,7 +281,7 @@ This section visualizes the impact of different cache replacement and prefetcher
 
 ## 4. **DL1 Hit Rate Across Associativities and Replacement Policies**
 
-![DL1 Hit Rate Across Associativities and Replacement Policies](plot_4_assoc_repl_benchmark_comparison.jpg)
+![alt text](plot_4_assoc_repl_benchmark_comparison.png)
 
 **Interpretation:**  
 - **1-way (Direct-Mapped):** Consistently lowest performance due to high conflict misses, as blocks frequently “fight” for the same cache slot.
