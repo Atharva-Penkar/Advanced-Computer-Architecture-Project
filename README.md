@@ -84,11 +84,21 @@ These additions provide the ability to simulate and analyze advanced cache behav
 
 ## Usage
 
-- Set replacement policy: `-repl=lfu` for LFU replacement.
+- Set replacement policy: `:q` instead of `:l/r/f` in cache configuration for LFU replacement.
 - Set prefetcher policy: `-prefetcher=none`, `-prefetcher=next_line`, or `-prefetcher=stride`.
 - Run simulations to analyze performance impact using different configurations.
 
 ---
+
+## To Run
+You may use the existing shell script `runAll.sh` in order for the code to run:
+- `run_benchmarks.sh`: runs all benchmarks in ./benchmarks with all the cache configurations in ./cache_configs with all 3 prefetcher options.
+- `extract_data.sh`: goes over all the results stored in ./results directory plots the dl1 and il1 hit rates in `benchmarks_data.csv`.
+- `plotdata.py`: reads data from `ACAprojectdata.csv` which is manually cleaned data from `benchmarks_data.csv` and makes plots.
+
+Steps:
+- chmod +x runAll.sh
+- ./runAll.sh
 
 ## Conclusion
 
