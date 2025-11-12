@@ -244,11 +244,6 @@ cache_issue_prefetch(struct cache_t *cp, md_addr_t addr, tick_t now)
     link_htab_ent(cp, &cp->sets[set], repl);
 }
 
-/*
- * This function contains your prefetcher logic.
- * It is called on every *new* block access (miss or slow hit)
- * to train the prefetcher and issue a prefetch.
- */
 static void
 cache_prefetch_logic(struct cache_t *cp, md_addr_t addr, tick_t now)
 {
