@@ -346,6 +346,13 @@ sim_check_options(struct opt_odb_t *odb,	/* options database */
   char name[128], c;
   int nsets, bsize, assoc;
 
+  if (!strcmp(prefetcher_opt, "next_line"))
+    prefetcher = PREF_NEXT_LINE;
+  else if (!strcmp(prefetcher_opt, "stride"))
+    prefetcher = PREF_STRIDE;
+  else
+    prefetcher = PREF_NONE;
+
   /* use a level 1 D-cache? */
   if (!mystricmp(cache_dl1_opt, "none"))
     {
@@ -469,14 +476,6 @@ sim_check_options(struct opt_odb_t *odb,	/* options database */
 			  cache_char2policy(c), prefetcher, dtlb_access_fn,
 			  /* hit latency */1);
     }
-
-  if (!strcmp(prefetcher_opt, "next_line"))
-      prefetcher = PREF_NEXT_LINE;
-  else if (!strcmp(prefetcher_opt, "stride"))
-      prefetcher = PREF_STRIDE;
-  else
-      prefetcher = PREF_NONE;
-
 }
 
 /* initialize the simulator */
