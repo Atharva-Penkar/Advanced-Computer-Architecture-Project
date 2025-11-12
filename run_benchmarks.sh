@@ -6,7 +6,7 @@ CONFIG_DIR="./cache_configs"
 RESULTS_DIR="./results"
 
 PREFETCHER_TYPES=("none" "next_line" "stride")
-MAX_JOBS=16  # Max number of concurrent jobs
+MAX_JOBS=24  # Max number of concurrent jobs
 
 echo "Starting cache simulation for all benchmarks and configurations..."
 

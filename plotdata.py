@@ -88,6 +88,43 @@ def plot_simple_comparison(df, title, x_col, filename, y_label, normalize=False)
     plt.savefig(filename)
 
 
+def plot_replacement_vs_prefetcher(df, filename="plot_replacement_vs_prefetcher.png"):
+    """
+    Creates grouped bars for each replacement policy, showing the DL1 hit rate
+    for each prefetcher (none, next_line, stride).
+    """
+    plot_data = df.groupby(['repl', 'prefetcher'], observed=False)['DL1_Hit_Rate'].mean().reset_index()
+
+    plt.figure(figsize=(12, 6))
+    repls = plot_data['repl'].unique()
+    prefetchers = plot_data['prefetcher'].unique()
+    n_repls = len(repls)
+    n_pref = len(prefetchers)
+    bar_width = 0.8 / n_pref
+    x_pos = np.arange(n_repls)
+    colors = plt.colormaps['viridis'](np.linspace(0, 1, n_pref))
+
+    for i, pref in enumerate(prefetchers):
+        subset = plot_data[plot_data['prefetcher'] == pref]
+        subset_ordered = [subset[subset['repl'] == r]['DL1_Hit_Rate'].iloc[0] if r in subset['repl'].values else 0 for r in repls]
+        bar_x = x_pos + i * bar_width - (n_pref - 1) * bar_width / 2
+        plt.bar(bar_x, subset_ordered, bar_width, label=pref, color=colors[i], edgecolor='black')
+
+    y_min = plot_data['DL1_Hit_Rate'].min()
+    y_max = plot_data['DL1_Hit_Rate'].max()
+    margin = (y_max - y_min) * 0.2 if y_max > y_min else 0.001
+    plt.ylim(y_min - margin, y_max + margin)
+
+    plt.title("2. DL1 Hit Rate by Replacement Policy and Prefetcher (Across All Benchmarks)", fontsize=14)
+    plt.xlabel("Replacement Policy", fontsize=12)
+    plt.ylabel("Average DL1 Hit Rate", fontsize=12)
+    plt.xticks(x_pos, repls, fontsize=10)
+    plt.legend(title="Prefetcher", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.savefig(filename)
+
+
 def plot_benchmark_breakdown(df, filename="plot_benchmark_breakdown_fixed.png"):
     df['Policy_Pref'] = df['repl'].str.upper() + " / " + df['prefetcher']
     plot_grouped_comparison(
@@ -101,12 +138,7 @@ def plot_benchmark_breakdown(df, filename="plot_benchmark_breakdown_fixed.png"):
 
 
 def plot_assoc_replacement_benchmark(df, filename="plot_assoc_repl_benchmark_comparison.png"):
-    """
-    Compares DL1 hit rates for benchmarks across different associativities and replacement policies.
-    """
-    # Combine associativity and replacement for grouped visualization
     df['Assoc_Repl'] = df['assoc'].astype(str) + "-way / " + df['repl'].str.upper()
-
     plot_grouped_comparison(
         df,
         "DL1 Hit Rate by Benchmark Across Associativities and Replacement Policies",
@@ -120,33 +152,29 @@ def plot_assoc_replacement_benchmark(df, filename="plot_assoc_repl_benchmark_com
 if __name__ == "__main__":
     df_long = load_and_preprocess_data(CSV_PATH)
     if df_long is not None:
-        # 1. Prefetcher comparison (unnormalized)
+        # 1. Prefetcher comparison (normalized)
         plot_simple_comparison(
             df_long,
             "1. Average DL1 Hit Rate by Prefetcher Policy (Across All Benchmarks)",
             'prefetcher',
-            filename="plot_1_prefetcher_comparison.png",
-            y_label="Average DL1 Hit Rate",
-            normalize=False
-        )
-
-        # 2. Replacement comparison (normalized)
-        plot_simple_comparison(
-            df_long,
-            "2. Average DL1 Hit Rate by Replacement Policy (Across All Benchmarks)",
-            'repl',
-            filename="plot_2_replacement_comparison_normalized.png",
+            filename="plot_1_prefetcher_comparison_normalized.png",
             y_label="Average DL1 Hit Rate",
             normalize=True
         )
 
-        # 3. Benchmark breakdown by policy and prefetcher
+        # 2. Replacement policy grouped by prefetcher
+        plot_replacement_vs_prefetcher(
+            df_long,
+            filename="plot_2_replacement_vs_prefetcher.png"
+        )
+
+        # 3. Benchmark breakdown
         plot_benchmark_breakdown(
             df_long,
             filename="plot_3_benchmark_breakdown_fixed.png"
         )
 
-        # 4. New: Benchmark comparison across associativity and replacement policy
+        # 4. Associativity + replacement comparison
         plot_assoc_replacement_benchmark(
             df_long,
             filename="plot_4_assoc_repl_benchmark_comparison.png"
