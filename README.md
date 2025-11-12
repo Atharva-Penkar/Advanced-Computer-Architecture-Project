@@ -113,7 +113,7 @@ chmod +x runAll.sh
 ```
 ---
 
-# Cache Benchmark Suite Readme
+# Cache Benchmark Suite
 
 This document summarizes the eight primary cache workloads used for testing replacement policies, prefetcher effectiveness, and geometry sensitivity.
 
