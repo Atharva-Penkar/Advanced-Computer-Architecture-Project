@@ -1,8 +1,8 @@
 # Advanced Computer Architecture Project
 
 **Authors:**  
-Aditya Dhananjay Singh (22cs02001)
-Kumar Snehal (22cs02009)
+Aditya Dhananjay Singh (22cs02001),
+Kumar Snehal (22cs02009),
 Atharva Atul Penkar (22cs02011)
 
 **Report:**  
